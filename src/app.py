@@ -159,7 +159,7 @@ def render_grade_prediction():
                 - Scores range from 0 (no influence) to 1 (strong influence)
                 - Focus on improving factors with higher scores
                 """)
-                
+            
                 st.markdown("#### Key Factors")
                 st.markdown("""
                 - **Study Time:** Weekly study hours
