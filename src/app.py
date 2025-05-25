@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
+try:
+    import plotly.express as px
+except ImportError:
+    st.error("Error: Plotly is not installed. Please install it using: pip install plotly")
+    st.stop()
 from datetime import datetime
 
 from styles.custom_css import apply_custom_css
