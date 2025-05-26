@@ -42,7 +42,7 @@ def apply_custom_css():
         .text-warning { color: var(--warning-color); }
         .text-error { color: var(--error-color); }
 
-        /* Headers */
+        
         .main-header {
             font-size: 42px;
             color: var(--primary-color);

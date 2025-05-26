@@ -6,6 +6,7 @@ except ImportError:
     st.error("Error: Plotly is not installed. Please install it using: pip install plotly")
     st.stop()
 from datetime import datetime
+import numpy as np
 
 from styles.custom_css import apply_custom_css
 from utils.constants import GRADE_POINTS, DIFFICULTY_LEVELS, SUBJECTS, STUDY_TIPS
@@ -542,4 +543,4 @@ def main():
         render_what_if_analysis()
 
 if __name__ == "__main__":
-    main() 
+    main()
