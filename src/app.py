@@ -510,7 +510,6 @@ def render_manage_courses():
 
 def main():
     """Main application entry point."""
-    # Set page configuration
     st.set_page_config(page_title="GPA Insight", page_icon="📚", layout="wide")
     
     # Apply custom CSS
