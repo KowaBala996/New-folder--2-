@@ -19,7 +19,6 @@ class GradePredictor:
         
         df = courses_df.copy()
         
-        # Extract features
         df['Semester_Num'] = df['Semester'].str.extract(r'(\d{4})').astype(float)
         df['Subject'] = df['Course Code'].str.extract(r'([A-Z]{2,4})')[0]
         df['Course_Level'] = df['Course Code'].str.extract(r'[A-Z]+(\d)')[0].astype(float)
