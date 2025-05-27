@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.impute import SimpleImputer
 from utils.constants import GRADE_POINTS
 
 class GradePredictor:
@@ -39,8 +40,13 @@ class GradePredictor:
         df['Grade_Points'] = df['Grade'].map(GRADE_POINTS)
         target = df['Grade_Points']
         
+        # Impute missing values
+        imputer = SimpleImputer(strategy="mean")
+        X = imputer.fit_transform(features)
+        y = target.values
+
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         
         # Train model
         self.model = RandomForestRegressor(n_estimators=100, random_state=42)
@@ -113,7 +119,11 @@ class GradePredictor:
         
         importances = self.model.feature_importances_
         
+        # Ensure lengths match
+        if len(feature_names) != len(importances):
+            feature_names = feature_names[:len(importances)]
+        
         return pd.DataFrame({
             'Feature': feature_names,
             'Importance': importances
-        }).sort_values('Importance', ascending=False) 
+        }).sort_values('Importance', ascending=False)
