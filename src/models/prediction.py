@@ -112,17 +112,18 @@ class GradePredictor:
         """Get feature importance from the trained model."""
         if not self.is_trained:
             return None
-        
+
         feature_names = ['Credits', 'Semester_Num', 'Course_Level']
         subject_cols = [f'Subject_{cat}' for cat in self.encoder.categories_[0]]
         feature_names.extend(subject_cols)
-        
+
         importances = self.model.feature_importances_
-        
-        # Ensure lengths match
-        if len(feature_names) != len(importances):
-            feature_names = feature_names[:len(importances)]
-        
+
+        # Fix: Ensure lengths match
+        min_len = min(len(feature_names), len(importances))
+        feature_names = feature_names[:min_len]
+        importances = importances[:min_len]
+
         return pd.DataFrame({
             'Feature': feature_names,
             'Importance': importances
