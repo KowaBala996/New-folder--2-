@@ -26,6 +26,37 @@ def set_background(png_file):
     ''' % bin_str
     st.markdown(page_bg_img, unsafe_allow_html=True)
 
+def create_performance_heatmap(courses_df):
+    """Create a heatmap showing performance by subject and semester."""
+    # Group data by subject and semester
+    performance_data = courses_df.groupby(['Subject', 'Semester'])['Grade'].apply(
+        lambda x: x.map(GRADE_POINTS).mean()
+    ).reset_index()
+    
+    # Pivot the data for the heatmap
+    heatmap_data = performance_data.pivot(
+        index='Subject',
+        columns='Semester',
+        values='Grade'
+    )
+    
+    # Create the heatmap
+    fig = px.imshow(
+        heatmap_data,
+        labels=dict(x="Semester", y="Subject", color="Average Grade Points"),
+        color_continuous_scale=px.colors.sequential.Blues,
+        title="Performance Heatmap by Subject and Semester"
+    )
+    
+    fig.update_layout(
+        xaxis_title="Semester",
+        yaxis_title="Subject",
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)'
+    )
+    
+    return fig
+
 def render_dashboard():
     """Render the dashboard tab."""
     # Add a welcome banner
@@ -119,6 +150,16 @@ def render_dashboard():
                      plot_bgcolor='rgba(0,0,0,0)')
     
     st.plotly_chart(fig, use_container_width=True)
+    
+    # Add the performance heatmap after the grade distribution
+    st.markdown('<h3 class="section-header">Performance Heatmap</h3>', unsafe_allow_html=True)
+    
+    # Extract subject from course code
+    st.session_state.courses['Subject'] = st.session_state.courses['Course Code'].str.extract(r'([A-Z]{2,4})')[0]
+    
+    # Create and display the heatmap
+    heatmap_fig = create_performance_heatmap(st.session_state.courses)
+    st.plotly_chart(heatmap_fig, use_container_width=True)
     
     # Course Performance Table
     st.markdown('<h3 class="section-header">Course Performance</h3>', unsafe_allow_html=True)
