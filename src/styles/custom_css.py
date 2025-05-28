@@ -194,7 +194,6 @@ def apply_custom_css():
             color: var(--error-color);
         }
 
-        /* Info boxes */
         .stInfo {
             background-color: var(--accent-color);
             border-left: 4px solid var(--primary-color);
