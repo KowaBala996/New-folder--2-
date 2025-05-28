@@ -461,4 +461,4 @@ def apply_custom_css():
             display: block !important;
         }
     </style>
-    """, unsafe_allow_html=True) 
+    """, unsafe_allow_html=True)
