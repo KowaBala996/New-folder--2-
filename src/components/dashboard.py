@@ -58,7 +58,11 @@ def create_performance_heatmap(courses_df):
     return fig
 
 def render_dashboard():
-    """Render the dashboard tab."""
+    courses = st.session_state.get("courses", pd.DataFrame())
+    if courses is None or not isinstance(courses, pd.DataFrame) or courses.empty:
+        st.info("Add some courses to see your academic dashboard!")
+        return
+    
     # Add a welcome banner
     st.markdown("""
         <div style='text-align: center; padding: 20px; background-color: #f0f2f6; border-radius: 10px; margin-bottom: 20px;'>
@@ -67,12 +71,8 @@ def render_dashboard():
         </div>
     """, unsafe_allow_html=True)
     
-    if st.session_state.courses.empty:
-        st.info("Add some courses to see your academic dashboard!")
-        return
-    
     # Calculate overall GPA
-    overall_gpa = calculate_gpa(st.session_state.courses)
+    overall_gpa = calculate_gpa(courses)
     
     # Display key metrics with icons
     col1, col2, col3 = st.columns(3)
@@ -86,7 +86,7 @@ def render_dashboard():
         """.format(overall_gpa), unsafe_allow_html=True)
     
     with col2:
-        total_credits = st.session_state.courses['Credits'].sum()
+        total_credits = courses['Credits'].sum()
         st.markdown("""
             <div style='text-align: center; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
                 <h3 style='color: #1f77b4;'>📚 Total Credits</h3>
@@ -95,7 +95,7 @@ def render_dashboard():
         """.format(total_credits), unsafe_allow_html=True)
     
     with col3:
-        total_courses = len(st.session_state.courses)
+        total_courses = len(courses)
         st.markdown("""
             <div style='text-align: center; padding: 20px; background-color: #ffffff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);'>
                 <h3 style='color: #1f77b4;'>📝 Total Courses</h3>
@@ -108,7 +108,7 @@ def render_dashboard():
     # GPA Trend Chart
     st.markdown('<h3 class="section-header">GPA Trend</h3>', unsafe_allow_html=True)
     
-    semester_groups = st.session_state.courses.groupby('Semester')
+    semester_groups = courses.groupby('Semester')
     semester_gpas = []
     
     for sem, group in semester_groups:
@@ -133,7 +133,7 @@ def render_dashboard():
     # Grade Distribution
     st.markdown('<h3 class="section-header">Grade Distribution</h3>', unsafe_allow_html=True)
     
-    grade_counts = st.session_state.courses['Grade'].value_counts().reset_index()
+    grade_counts = courses['Grade'].value_counts().reset_index()
     grade_counts.columns = ['Grade', 'Count']
     
     grade_order = sorted(grade_counts['Grade'], key=lambda x: GRADE_POINTS.get(x, 0), reverse=True)
@@ -155,16 +155,16 @@ def render_dashboard():
     st.markdown('<h3 class="section-header">Performance Heatmap</h3>', unsafe_allow_html=True)
     
     # Extract subject from course code
-    st.session_state.courses['Subject'] = st.session_state.courses['Course Code'].str.extract(r'([A-Z]{2,4})')[0]
+    courses['Subject'] = courses['Course Code'].str.extract(r'([A-Z]{2,4})')[0]
     
     # Create and display the heatmap
-    heatmap_fig = create_performance_heatmap(st.session_state.courses)
+    heatmap_fig = create_performance_heatmap(courses)
     st.plotly_chart(heatmap_fig, use_container_width=True)
     
     # Course Performance Table
     st.markdown('<h3 class="section-header">Course Performance</h3>', unsafe_allow_html=True)
     
-    course_df = st.session_state.courses[['Semester', 'Course Code', 'Course Name', 'Credits', 'Grade']]
+    course_df = courses[['Semester', 'Course Code', 'Course Name', 'Credits', 'Grade']]
     course_df['GPA Impact'] = course_df['Credits'] * course_df['Grade'].map(GRADE_POINTS)
     
     st.dataframe(course_df.sort_values('GPA Impact', ascending=False), use_container_width=True,
@@ -174,4 +174,5 @@ def render_dashboard():
                         help="The weighted impact of this course on your GPA",
                         format="%.2f",
                     ),
-                }) 
+        
+         })
