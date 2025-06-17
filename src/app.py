@@ -202,7 +202,15 @@ def render_study_optimizer():
         if optimize_button:
             if course_name:
                 recommended_hours = recommend_study_time(difficulty, credits, target_grade)
-                
+                # Validate recommended_hours
+                if (
+                    recommended_hours is None or
+                    not isinstance(recommended_hours, (int, float)) or
+                    (isinstance(recommended_hours, float) and np.isnan(recommended_hours)) or
+                    recommended_hours < 0
+                ):
+                    st.error("Could not generate a study plan. Please check your input or contact support.")
+                    return
                 st.markdown(f"""
                 <div style="background-color: #f0f7ff; padding: 20px; border-radius: 10px; border-left: 5px solid #1E88E5;">
                     <h3 style="color: #0D47A1;">Recommended Study Plan for {course_name}</h3>
