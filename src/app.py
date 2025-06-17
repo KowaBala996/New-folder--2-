@@ -17,7 +17,6 @@ import numpy as np
 from styles.custom_css import apply_custom_css
 from utils.constants import GRADE_POINTS, DIFFICULTY_LEVELS, SUBJECTS, STUDY_TIPS
 from utils.helpers import calculate_gpa, add_course, delete_course, recommend_study_time, simulate_gpa
-from models.prediction import GradePredictor
 from components.dashboard import render_dashboard
 from components.course_management import render_manage_courses
 
@@ -48,136 +47,6 @@ def initialize_session_state():
     """Initialize session state variables."""
     if 'courses' not in st.session_state:
         st.session_state.courses = load_courses_data()
-    
-    if 'predictor' not in st.session_state:
-        st.session_state.predictor = GradePredictor()
-
-def render_grade_prediction():
-    """Render the grade prediction tab."""
-    st.markdown('<h2 class="section-header">AI Grade Prediction</h2>', unsafe_allow_html=True)
-    
-    if len(st.session_state.courses) < 5:
-        st.warning("You need at least 5 courses in your record to use the grade prediction feature.")
-        return
-    
-    # Train the model
-    if not st.session_state.predictor.is_trained:
-        if st.button("Train Prediction Model", type="primary"):
-            with st.spinner("Training model..."):
-                success, train_score, test_score = st.session_state.predictor.train(st.session_state.courses)
-                if success:
-                    st.success("Model trained successfully!")
-                    st.markdown(f"""
-                    <div style="background-color: var(--accent-color); padding: 15px; border-radius: 8px; margin: 10px 0;">
-                        <h4 style="color: var(--primary-color); margin-bottom: 10px;">Model Performance</h4>
-                        <p style="margin: 5px 0;">Training accuracy: <strong>{train_score:.2f}</strong></p>
-                        <p style="margin: 5px 0;">Testing accuracy: <strong>{test_score:.2f}</strong></p>
-                    </div>
-                    """, unsafe_allow_html=True)
-    else:
-        st.success("Your prediction model is ready!")
-        
-        # Form for grade prediction
-        with st.form("predict_grade_form"):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                latest_semester = "Semester 1.1"  
-                if not st.session_state.courses.empty:
-                    semesters = st.session_state.courses['Semester'].unique().tolist()
-                    latest_semester = semesters[-1]
-                
-                pred_semester = st.selectbox(
-                    "Semester",
-                    options=[
-                        "Semester 1.1", "Semester 1.2",
-                        "Semester 2.1", "Semester 2.2",
-                        "Semester 3.1", "Semester 3.2",
-                        "Semester 4.1", "Semester 4.2",
-                        "Semester 5.1", "Semester 5.2",
-                        "Semester 6.1", "Semester 6.2"
-                    ],
-                    help="Select the semester for this course"
-                )
-                pred_course_code = st.text_input("Course Code", placeholder="CS301", help="Enter the course code (e.g., CS301)")
-            
-            with col2:
-                pred_credits = st.number_input("Credits", min_value=1, max_value=6, value=3, help="Select the number of credits for the course")
-            
-            predict_button = st.form_submit_button("Predict Grade", type="primary")
-            
-            if predict_button:
-                if pred_semester and pred_course_code:
-                    with st.spinner("Predicting grade..."):
-                        result = st.session_state.predictor.predict(pred_semester, pred_course_code, pred_credits)
-                        
-                        if result is not None:
-                            predicted_grade, predicted_points = result
-                            
-                            grade_color = "#4CAF50" if predicted_points >= 3.0 else "#FFC107" if predicted_points >= 2.0 else "#F44336"
-                            
-                            st.markdown(f"""
-                            <div style="background-color: var(--accent-color); padding: 20px; border-radius: 10px; border-left: 5px solid {grade_color}; margin-top: 20px;">
-                                <h3 style="color: var(--text-color); margin-bottom: 15px;">Predicted Grade</h3>
-                                <p style="color: var(--text-secondary);">Based on your academic history, our AI predicts you will likely earn a grade of:</p>
-                                <h2 style="color: {grade_color}; text-align: center; font-size: 36px; margin: 20px 0;">{predicted_grade}</h2>
-                                <p style="text-align: center; color: var(--text-secondary);">({predicted_points:.2f} points)</p>
-                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solidrgb(96, 91, 91);">
-                                    <p style="color: var(--text-muted); font-size: 0.9em;">
-                                        <strong>Note:</strong> This prediction is based on your past performance, course difficulty, and other factors.
-                                    </p>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.error("Prediction failed. Please check your input and try again.")
-                else:
-                    st.error("Please fill in all required fields.")
-        
-        # Display feature importance
-        st.markdown("---")
-        st.markdown("### Grade Influencing Factors")
-        
-        if st.checkbox("Show what factors influence your grades the most", value=False):
-            feature_importance = st.session_state.predictor.get_feature_importance()
-            if feature_importance is not None:
-                # Create a more visually appealing chart
-                fig = px.bar(feature_importance.head(10), 
-                            x='Importance', 
-                            y='Feature', 
-                            orientation='h',
-                            title='Top Factors Influencing Your Grades',
-                            color='Importance',
-                            color_continuous_scale=px.colors.sequential.Blues)
-                
-                fig.update_layout(
-                    yaxis={'categoryorder': 'total ascending'},
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    margin=dict(l=20, r=20, t=40, b=20),
-                    xaxis_title="Influence Score (0-1)",
-                    yaxis_title="Factors",
-                    title_x=0.5,
-                    title_font_size=20
-                )
-                
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Feature Importance Section
-                st.markdown("#### Understanding the Graph")
-                st.markdown("""
-                - Higher bars indicate stronger influence on your grades
-                - Scores range from 0 (no influence) to 1 (strong influence)
-                - Focus on improving factors with higher scores
-                """)
-            
-                st.markdown("#### Key Factors")
-                st.markdown("""
-                - **Study Time:** Weekly study hours
-                - **Previous Grades:** Academic history
-                - **Attendance:** Class participation
-                - **Course Difficulty:** Course complexity
-                """)
 
 def render_study_optimizer():
     """Render the study optimizer tab."""
@@ -536,8 +405,8 @@ def main():
     st.markdown('<h1 class="main-header">📚 GPA Insight</h1>', unsafe_allow_html=True)
     st.markdown("Academic performance tracker and GPA optimizer")
     
-    # Create tabs
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Dashboard", "Manage Courses", "Grade Prediction", "Study Optimizer", "What-If Analysis"])
+    # Create tabs (remove Grade Prediction tab)
+    tab1, tab2, tab3, tab4 = st.tabs(["Dashboard", "Manage Courses", "Study Optimizer", "What-If Analysis"])
     
     # Render each tab
     with tab1:
@@ -547,12 +416,9 @@ def main():
         render_manage_courses()
     
     with tab3:
-        render_grade_prediction()
-    
-    with tab4:
         render_study_optimizer()
     
-    with tab5:
+    with tab4:
         render_what_if_analysis()
 
 if __name__ == "__main__":
