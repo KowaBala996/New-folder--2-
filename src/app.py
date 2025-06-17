@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(__file__))
 
 import streamlit as st
@@ -9,6 +10,7 @@ try:
 except ImportError:
     st.error("Error: Plotly is not installed. Please install it using: pip install plotly")
     st.stop()
+from utils.constants import GRADE_POINTS, DIFFICULTY_LEVELS, SUBJECTS, STUDY_TIPS
 from datetime import datetime
 import numpy as np
 
@@ -189,7 +191,7 @@ def render_study_optimizer():
             course_name = st.text_input("Course Name", placeholder="Data Structures", key="opt_course_name")
         
         with col2:
-            difficulty = st.selectbox("Course Difficulty", list(DIFFICULTY_LEVELS.keys()), key="opt_difficulty")
+            difficulty = st.selectbox("Course Difficulty", DIFFICULTY_LEVELS, key="opt_difficulty")
             credits = st.number_input("Course Credits", min_value=1, max_value=6, value=3, key="opt_credits")
         
         with col3:
